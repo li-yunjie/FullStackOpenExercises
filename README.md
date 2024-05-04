@@ -1,2 +1,2 @@
 # FullStackOpenExercises
-Homeworks of https://fullstackopen.com/en/
+Homework of https://fullstackopen.com/en/
