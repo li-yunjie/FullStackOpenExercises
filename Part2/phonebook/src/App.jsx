@@ -3,6 +3,7 @@ import Filter from './Components/Filter'
 import PersonForm from './Components/PersonForm'
 import Persons from './Components/Persons'
 import axios from 'axios'
+import personService from './services/person'
 
 const App = () => {
   const [persons, setPersons] = useState([])
@@ -11,25 +12,45 @@ const App = () => {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    axios.get('http://localhost:3001/persons').then(response => {
-      setPersons(response.data)
+    personService.getAll().then(allPersons => {
+      setPersons(allPersons)
     })
   }, [])
 
   const addPerson = (event) => {
     event.preventDefault()
-    if (persons.some(person => person.name === newName)) {
-      alert(`${newName} is already added to the phonebook`)
+    const existingPerson = persons.find(person => person.name === newName)
+    
+    if (existingPerson) {
+      updatePerson(existingPerson.id, { name: newName, number: newNumber })
     } else {
       const newPerson = { 
         name: newName, 
-        number: newNumber, 
-        id: persons.length + 1 // Add this line to generate a new id
+        number: newNumber
       }
-      setPersons(persons.concat(newPerson))
-      setNewName('')
-      setNewNumber('')
+      personService.addPerson(newPerson).then(returnedPerson => { 
+        setPersons(persons.concat(returnedPerson))
+        setNewName('')
+        setNewNumber('')
+      })
     }
+  }
+
+  const deletePerson = (id) => {
+    const personToDelete = persons.find(person => person.id === id);
+    if (window.confirm(`Delete ${personToDelete.name}?`)) {
+      personService.deletePerson(id).then(() => {
+        setPersons(persons.filter(person => person.id !== id));
+      }).catch(error => {
+        console.error("Error deleting person:", error);
+      });
+    }
+  }
+
+  const updatePerson = (id, newPerson) => {
+    personService.updatePerson(id, newPerson).then(returnedPerson => {
+      setPersons(persons.map(person => person.id !== id ? person : returnedPerson))
+    })
   }
 
   const searchPerson = (event) => {
@@ -67,7 +88,7 @@ const App = () => {
         addPerson={addPerson}
       />    
       <h3>Numbers</h3>
-      <Persons persons={persons} searchPerson={search} />
+      <Persons persons={persons} searchPerson={search} deletePerson={deletePerson} />
     </div>
   )
 }
