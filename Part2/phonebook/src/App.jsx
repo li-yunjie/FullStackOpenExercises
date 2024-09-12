@@ -4,12 +4,15 @@ import PersonForm from './Components/PersonForm'
 import Persons from './Components/Persons'
 import axios from 'axios'
 import personService from './services/person'
+import Notification from './Components/Notification'
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [search, setSearch] = useState('')
+  const [message, setMessage] = useState(null)
+  const [messageType, setMessageType] = useState(null)
 
   useEffect(() => {
     personService.getAll().then(allPersons => {
@@ -29,6 +32,10 @@ const App = () => {
         number: newNumber
       }
       personService.addPerson(newPerson).then(returnedPerson => { 
+        setMessage(`Added ${returnedPerson.name}`)
+        setTimeout(() => {
+          setMessage(null)
+        }, 5000)  
         setPersons(persons.concat(returnedPerson))
         setNewName('')
         setNewNumber('')
@@ -42,7 +49,12 @@ const App = () => {
       personService.deletePerson(id).then(() => {
         setPersons(persons.filter(person => person.id !== id));
       }).catch(error => {
-        console.error("Error deleting person:", error);
+        setMessage(`Error deleting ${personToDelete.name}`)
+        setMessageType('error')
+        setTimeout(() => {
+          setMessage(null)
+          setMessageType(null)
+        }, 5000)
       });
     }
   }
@@ -74,6 +86,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} type={messageType} />
       <Filter 
         search={search} 
         handleSearchChange={handleSearchChange} 
